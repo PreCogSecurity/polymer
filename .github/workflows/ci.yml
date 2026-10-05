@@ -1,0 +1,71 @@
+name: CI
+
+# Runs the checks that are reproducible on a fresh clone: reproducible install
+# from the committed lockfile, ESLint over all source and test code, and the
+# Node unit suite for the release build tooling.
+on:
+  push:
+    branches:
+      - master
+      - main
+  pull_request:
+  workflow_dispatch:
+
+# Least privilege: CI only needs to read the repository.
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Lint and test (Node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node:
+          - '22'
+          - '24'
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      # `npm ci` (not `npm install`) so CI can never silently resolve a
+      # different dependency tree than the one the lockfile pins.
+      - name: Install from lockfile
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests (release build tooling)
+        run: npm run test:node
+
+      - name: Unit tests with coverage
+        run: npm run test:coverage
+
+  dependency-audit:
+    name: Dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install from lockfile
+        run: npm ci --ignore-scripts
+
+      # The published library has no runtime dependencies; everything is a
+      # devDependency, so this audits the whole toolchain. The 2016-era tool
+      # chain (gulp 3, wct 4) carries known advisories that cannot be cleared
+      # without a major toolchain migration, so this step reports rather than
+      # blocks. Flip `continue-on-error` to false once that migration lands.
+      - name: npm audit (high/critical)
+        continue-on-error: true
+        run: npm audit --audit-level=high

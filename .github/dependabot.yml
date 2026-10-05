@@ -1,0 +1,45 @@
+version: 2
+
+updates:
+  # The entire toolchain is devDependencies; keep it current so the release
+  # build and lint pipeline do not accumulate known advisories.
+  - package-ecosystem: npm
+    directory: '/'
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - build
+    groups:
+      # Keep security-driven bumps for the whole legacy toolchain together so
+      # a single PR can move it, rather than a long drip of broken-PRs.
+      build-toolchain:
+        patterns:
+          - gulp
+          - gulp-*
+          - lazypipe
+          - run-sequence
+          - polyclean
+          - del
+          - through2
+          - dom5
+      lint:
+        patterns:
+          - eslint
+          - eslint-*
+      test:
+        patterns:
+          - web-component-tester
+          - sinon
+          - mocha
+
+  # Keep the browser test harness fresh.
+  - package-ecosystem: bower
+    directory: '/'
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+      - test

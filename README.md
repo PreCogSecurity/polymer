@@ -1,6 +1,7 @@
 # Polymer
 
-[![Build Status](https://travis-ci.org/Polymer/polymer.svg?branch=master)](https://travis-ci.org/Polymer/polymer)
+[![CI](https://github.com/PreCogSecurity/polymer/actions/workflows/ci.yml/badge.svg)](https://github.com/PreCogSecurity/polymer/actions/workflows/ci.yml)
+[![Security Policy](https://img.shields.io/badge/security-policy-blue.svg)](SECURITY.md)
 
 Polymer lets you build encapsulated, re-usable elements that work just like standard HTML elements, to use in building web applications.
 
@@ -180,6 +181,73 @@ By being based on Web Components, elements built with Polymer are:
 * Self-contained
 * Don't require an overarching framework - are interoperable across frameworks
 * Re-usable
+
+## Running Tests
+
+Requires a supported Node runtime (`>=22`; see `.nvmrc`) and a clean checkout.
+Install from the committed lockfile so the dependency tree is exactly what CI
+uses:
+
+```bash
+nvm use            # honours .nvmrc
+npm ci
+npm test
+```
+
+`npm test` runs ESLint over every source and test file, then the Node unit
+suite for the release build tooling (`test/node/`). It needs no browser and no
+external accounts, and it exits non-zero on failure.
+
+| Command | What it does |
+| ------- | ------------ |
+| `npm test` | Lint + Node unit tests. The default gate. |
+| `npm run lint` | ESLint only. `lint:src` covers `src/` and `test/unit/`, `lint:build` covers the Node build tooling. |
+| `npm run test:node` | Node unit tests only. |
+| `npm run test:coverage` | Node unit tests with V8 coverage reporting. |
+| `npm run test:browser` | The full `web-component-tester` suite in `test/unit/`. Needs real browsers (see below). |
+| `npm run audit` | `npm audit`, failing on high and critical advisories. |
+| `npm run build` | Legacy `gulp` release build (see limitations below). |
+
+### Containerised run
+
+If you would rather not install the toolchain locally:
+
+```bash
+docker build --tag polymer-test .
+docker run --rm polymer-test          # lint + unit tests
+```
+
+### Browser suites
+
+The browser suite (`test/unit/*.html`) is served and driven by
+`web-component-tester`, which launches real browsers and also needs the bower
+`webcomponentsjs` dependency:
+
+```bash
+bower install
+npm run test:browser
+```
+
+Two suites run in more than one DOM mode (`?dom=shadow`); the runner in
+`test/runner.html` is the source of truth for the suite list.
+
+### Known toolchain limitations
+
+The build toolchain is the 2016-era Polymer 1.x stack and is pinned as-is:
+
+- `gulp` 3 depends on `graceful-fs` 3, which crashes on Node 12 and newer
+  (`ReferenceError: primordials is not defined`). Linting and unit testing
+  therefore invoke `eslint` and `node --test` directly instead of going
+  through gulp, so `npm test` works on a current Node.
+- `npm run build` still requires the legacy toolchain and is expected to run
+  on Node 10 or older. Migrating it is tracked separately; until then the
+  published artifacts are unchanged.
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for the threat model, supported versions, and
+how to report a vulnerability. Do not report security issues through public
+issues.
 
 ## Contributing
 

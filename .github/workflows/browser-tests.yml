@@ -1,0 +1,49 @@
+name: Browser tests
+
+# The WCT suite under test/unit needs real browsers. It is not part of the
+# blocking CI pipeline because web-component-tester 4 pins a Selenium stack
+# that no longer runs on current browser builds; it is exposed here so the
+# suite can still be executed and triaged on demand against a pinned image.
+on:
+  workflow_dispatch:
+  schedule:
+    # Weekly, so browser regressions surface without waiting for a push.
+    - cron: '17 6 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  wct:
+    name: web-component-tester (Chrome ${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        browser:
+          - chrome
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - uses: browser-actions/setup-chrome@v1
+        with:
+          chrome-version: stable
+
+      - name: Install from lockfile
+        run: npm ci
+
+      - name: Install browser test dependencies (bower)
+        run: |
+          npm install -g bower
+          bower install --allow-root
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Run browser suites
+        run: xvfb-run --auto-servernum npx wct

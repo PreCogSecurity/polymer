@@ -1,0 +1,24 @@
+name: Docker verification
+
+# Proves the published Dockerfile actually builds and that `npm test` passes
+# inside it. Manual trigger only: it is the reproduction path documented in
+# README.md, kept out of the blocking pipeline so an image-layer change cannot
+# turn every pull request red.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  docker:
+    name: Build image and run npm test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build test image
+        run: docker build --tag polymer-test .
+
+      - name: Run lint + unit tests in the image
+        run: docker run --rm polymer-test

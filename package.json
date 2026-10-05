@@ -24,9 +24,19 @@
     "web-component-tester": "^4"
   },
   "scripts": {
+    "lint": "npm run lint:src && npm run lint:build",
+    "lint:src": "eslint --ext .js,.html src test/unit",
+    "lint:build": "eslint --no-eslintrc -c .eslintrc.node.json gulpfile.js util test/node",
+    "test": "npm run lint && npm run test:node",
+    "test:node": "node --test \"test/node/*.test.js\"",
+    "test:browser": "wct",
+    "test:coverage": "node --test --experimental-test-coverage \"test/node/*.test.js\"",
+    "audit": "npm audit --audit-level=high",
     "build": "gulp",
-    "test": "gulp lint && wct",
     "test-build": "gulp switch && wct && gulp restore"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   },
   "repository": {
     "type": "git",

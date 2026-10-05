@@ -1,0 +1,11 @@
+{
+  "extends": "./.eslintrc.json",
+  "env": {
+    "browser": false,
+    "node": true,
+    "es6": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2018
+  }
+}
