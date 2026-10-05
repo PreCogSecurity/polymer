@@ -86,31 +86,36 @@ For maximum flexibility, install `web-component-tester` and `polyserve` locally:
 
 To run the Polymer library unit tests:
 
-1.  Clone the [Polymer repo](https://github.com/polymer/polymer).
+1.  Clone the [Polymer repo](https://github.com/PreCogSecurity/polymer).
 
-2.  Install the dependencies:
+2.  Use a supported Node runtime (`>=22`; see `.nvmrc`) and install the
+    dependencies from the committed lockfile:
 
-        npm install && bower install
+        nvm use
+        npm ci && bower install
 
-3.  Run the tests:
+3.  Run the lint and unit test gate:
 
         npm test
+
+    This runs ESLint over all source and test code, then the Node unit suite
+    for the release build tooling. It needs no browser.
+
+4.  Run the browser suites:
+
+        npm run test:browser
 
     Or if you have `web-component-tester` installed locally:
 
         wct
 
-To run individual test suites:
-
-<code>npm test <var>path/to/suite</var></code>
-
-Or:
+To run individual browser test suites:
 
 <code>wct <var>path/to/suite</var></code>
 
 For example:
 
-    npm test test/unit/template.html
+    npx wct test/unit/template.html
 
 You can also run tests in the browser:
 
@@ -119,6 +124,11 @@ You can also run tests in the browser:
 Navigate to:
 
 [`http://localhost:8080/components/polymer/test/runner.html`](http://localhost:8080/components/polymer/test/runner.html)
+
+> **Note**
+> The `gulp` 3 based release build (`npm run build`) does not run on Node 12
+> or newer. Lint and unit tests deliberately call `eslint` and `node --test`
+> directly so that `npm test` works on a current Node runtime.
 
 ### Running Polymer element unit tests
 

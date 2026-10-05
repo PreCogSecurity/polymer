@@ -1,0 +1,16 @@
+node_modules
+dist
+coverage
+bower_components
+.git
+.gitignore
+.eslintcache
+npm-debug.log*
+*.md
+!README.md
+!SECURITY.md
+*.bak
+.bak
+explainer
+PRIMER.md
+CHANGELOG.md
