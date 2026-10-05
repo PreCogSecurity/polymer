@@ -51,8 +51,24 @@ blocking once that migration lands.
 
 - `npm ci` from a committed `package-lock.json` in CI, so builds cannot
   silently resolve a different dependency tree.
-- Dependency install scripts are disabled in CI and in the Dockerfile
-  (`--ignore-scripts`) to limit install-time code execution.
+- Dependency install scripts are disabled in the blocking CI jobs and in the
+  Dockerfile (`--ignore-scripts`) to limit install-time code execution. The
+  lint and unit-test paths are pure JavaScript and need none of them; the only
+  packages in the tree that do have install scripts belong to the optional
+  browser harness, which is why that workflow leaves them enabled.
+- Every git dependency in the lockfile resolves over anonymous HTTPS at a
+  pinned commit SHA. No install step needs an SSH identity, so CI never
+  handles a deploy key or an `ssh-agent`, and no workflow can be broken by a
+  developer's SSH configuration.
+- Workflows run on a pinned runner image (`ubuntu-24.04`) rather than the
+  floating `ubuntu-latest` label, so a runner-image migration cannot change
+  what CI executes underneath a green check.
+- Third-party actions are pinned to immutable commit SHAs instead of mutable
+  tags, so a repointed tag cannot run unreviewed code with the workflow's
+  credentials. Dependabot's `github-actions` ecosystem is what moves them.
+- Workflow permissions are `contents: read`, jobs carry a `timeout-minutes`
+  budget so a hung step cannot pin a runner for 6 hours, and superseded runs
+  are cancelled rather than queued.
 - Container builds run as the non-root `node` user.
 - No credentials, tokens, or `.env` files are committed; `.gitignore` blocks
   them, and the obsolete Travis configuration that held encrypted Sauce Labs

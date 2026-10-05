@@ -10,12 +10,18 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: docker-verify-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   docker:
     name: Build image and run npm test
-    runs-on: ubuntu-latest
+    # Pinned image; see the note in ci.yml about the `ubuntu-latest` migration.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Build test image
         run: docker build --tag polymer-test .

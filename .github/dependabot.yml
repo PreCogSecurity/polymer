@@ -43,3 +43,21 @@ updates:
     labels:
       - dependencies
       - test
+
+  # Workflows pin every action to an immutable commit SHA rather than a mutable
+  # tag, so nothing moves without review. Dependabot is the only thing that
+  # moves them: without this ecosystem those SHAs would freeze and the pinned
+  # runners/actions would silently age out.
+  - package-ecosystem: github-actions
+    directory: '/'
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels:
+      - dependencies
+      - ci
+    groups:
+      actions:
+        patterns:
+          - '*'

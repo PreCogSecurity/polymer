@@ -13,33 +13,44 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: browser-tests-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   wct:
     name: web-component-tester (Chrome ${{ matrix.browser }})
-    runs-on: ubuntu-latest
+    # Pinned image; see the note in ci.yml about the `ubuntu-latest` migration.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
         browser:
           - chrome
     steps:
-      - uses: actions/checkout@v4
+      # Third-party actions are pinned to immutable commit SHAs, not mutable
+      # tags; Dependabot (.github/dependabot.yml) keeps them current.
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
           cache: npm
 
-      - uses: browser-actions/setup-chrome@v1
+      - uses: browser-actions/setup-chrome@c785b87e244131f27c9f19c1a33e2ead956ab7ce # v1.7.3
         with:
           chrome-version: stable
 
+      # Unlike the blocking lint/test job this keeps install scripts enabled:
+      # the browser harness (wct-local, sauce-connect-launcher) sets itself up
+      # in postinstall. Nothing here runs on a pull request from a fork.
       - name: Install from lockfile
-        run: npm ci
+        run: npm ci --no-audit --no-fund
 
       - name: Install browser test dependencies (bower)
         run: |
-          npm install -g bower
+          npm install --global bower@1.8.14
           bower install --allow-root
 
       - name: Lint

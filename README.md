@@ -217,6 +217,32 @@ docker build --tag polymer-test .
 docker run --rm polymer-test          # lint + unit tests
 ```
 
+### Continuous integration
+
+`.github/workflows/ci.yml` is the blocking gate. It runs on a pinned
+`ubuntu-24.04` image against Node 22 and Node 24, and its only steps are the
+three commands above, so a red check is always reproducible locally:
+
+```bash
+npm ci --ignore-scripts --no-audit --no-fund
+npm run lint
+npm run test:node
+npm run test:coverage
+```
+
+`--ignore-scripts` matches the Dockerfile: nothing on the lint or unit-test
+path needs an install script, and skipping them keeps the install from running
+code and fetching binaries on behalf of ~900 transitive devDependencies.
+
+Two further workflows are not part of the gate and run on demand or on a
+schedule: `browser-tests.yml` (the WCT suites, which need real browsers) and
+`docker-verify.yml` (builds the image and runs `npm test` inside it).
+
+All workflows pin third-party actions to immutable commit SHAs rather than
+mutable tags and run with `contents: read`. Dependabot
+(`.github/dependabot.yml`) tracks the npm, bower, and `github-actions`
+ecosystems and is what moves those SHAs forward.
+
 ### Browser suites
 
 The browser suite (`test/unit/*.html`) is served and driven by
